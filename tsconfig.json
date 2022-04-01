@@ -1,0 +1,32 @@
+{
+  // base config file, installed as a module
+  "compilerOptions": {
+    "lib": ["es2021"],
+    "declaration": true,
+    "module": "commonjs",
+    "target": "es2021",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    // where to emit
+    "outDir": "build/",
+    // source maps for js to ts error mapping
+    "sourceRoot": "src",
+    "sourceMap": true,
+    // try to infer js
+    "allowJs": true,
+    // makes things faster
+    "incremental": true,
+    // allow .json files to be imported
+    "resolveJsonModule": true,
+    // make ts stricter
+    "noImplicitAny": false,
+    "strict": true,
+    "strictNullChecks": true
+  }, // only look at these files
+  "include": ["src/**/*"],
+  "watchOptions": {
+    // dont watch these files
+    "excludeDirectories": ["build", "dist", "**/node_modules"]
+  }
+}
