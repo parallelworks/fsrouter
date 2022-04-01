@@ -197,5 +197,5 @@ export {
   userFacingErrorHandler,
 } from './middleware/errors'
 export { Endpoint } from './types'
-// TODO: Add FromSchema to this library and expose from here
+export { FromSchema } from 'json-schema-to-ts'
 export default router
