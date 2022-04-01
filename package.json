@@ -5,10 +5,7 @@
   "author": "Michael McQuade",
   "main": "build/index.js",
   "types": "build/index.d.ts",
-  "repository": {
-    "type": "git",
-    "url": "github.com/parallelworks/fsrouter"
-  },
+  "repository": "https://github.com/parallelworks/fsrouter",
   "scripts": {
     "compile": "tsc"
   },
