@@ -191,6 +191,11 @@ const getFiles = async (src: string) => {
 }
 
 // Expose library
-export { UserFacingError } from './middleware/errors'
+export {
+  UserFacingError,
+  defaultErrorHandler,
+  userFacingErrorHandler,
+} from './middleware/errors'
 export { Endpoint } from './types'
+// TODO: Add FromSchema to this library and expose from here
 export default router
