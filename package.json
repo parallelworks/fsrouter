@@ -1,6 +1,6 @@
 {
   "name": "@parallelworks/fsrouter",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Filesystem based router for Express.js",
   "author": "Michael McQuade",
   "main": "build/index.js",
