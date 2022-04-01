@@ -190,4 +190,7 @@ const getFiles = async (src: string) => {
   return glob(src + '/**/*.js', { nodir: true })
 }
 
+// Expose library
+export { UserFacingError } from './middleware/errors'
+export { Endpoint } from './types'
 export default router

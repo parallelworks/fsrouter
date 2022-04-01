@@ -13,7 +13,3 @@ export const AllowedMethods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as const
 export type AllowedMethod = typeof AllowedMethods[number]
 export const ExpressMethods = ['get', 'post', 'put', 'patch', 'delete'] as const
 export type ExpressMethod = typeof ExpressMethods[number]
-
-export interface ISession {
-  id: string
-}
