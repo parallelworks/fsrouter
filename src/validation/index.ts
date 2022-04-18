@@ -1,7 +1,7 @@
 import ajv from 'ajv/dist/2020'
 import { RequestHandler } from 'express'
 
-const Ajv = new ajv()
+const Ajv = new ajv({ coerceTypes: true })
 
 interface createQueryValidatorParams {
   query?: any
