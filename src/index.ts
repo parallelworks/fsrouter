@@ -67,8 +67,9 @@ export const initFsRouting = async ({
       const routePaths = [routePath]
 
       // we treat authentication differently on u routes and API routes, can get rid of this when client is separted from API server
-
-      console.log(`Mounting route:`, routePaths[0])
+      if (process.env.NODE_ENV !== 'test') {
+        console.log(`Mounting route:`, routePaths[0])
+      }
       const [routesMounted, routesWithoutValidation] = mountEndpoints({
         paths: routePaths,
         endpoints: module,
