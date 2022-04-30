@@ -84,7 +84,6 @@ export const asyncErrorHandler = function wrap(fn: RequestHandler) {
 
       await fn(req, res, next)
     } catch (e) {
-      console.error('Error in asyncErrorHandler')
       next(e)
     }
   }
