@@ -171,15 +171,15 @@ const mountEndpoints = ({
     handlers = hasMiddleware
       ? [...handlers, ...endpoint]
       : [...handlers, endpoint]
-
-    // add async handling to all handlers
-    handlers = handlers.map(handler => asyncErrorHandler(handler))
     // loop over handlers and print warnings if they are not async
     handlers.forEach(handler => {
       if (handler.constructor.name !== 'AsyncFunction') {
         console.error(`\t ⛔️ Warning: ${method} handler is not async. `)
       }
     })
+    // add async handling to all handlers
+    handlers = handlers.map(handler => asyncErrorHandler(handler))
+
     // mount the route
     router[expressMethodName](paths, handlers)
     console.log(`\t | ${method} ${validationMsg}`)
