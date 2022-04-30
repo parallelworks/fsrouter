@@ -24,12 +24,14 @@ interface IInitFsRoutingParams {
   ensureAdmin: RequestHandler
   ensureAuthenticated: RequestHandler
   routesPath: string
+  logMounts?: boolean
 }
 
 export const initFsRouting = async ({
   ensureAdmin,
   ensureAuthenticated,
   routesPath,
+  logMounts = true,
 }: IInitFsRoutingParams) => {
   // Apply middleware first
   console.log('Mounting routes')
@@ -67,7 +69,7 @@ export const initFsRouting = async ({
       const routePaths = [routePath]
 
       // we treat authentication differently on u routes and API routes, can get rid of this when client is separted from API server
-      if (process.env.NODE_ENV !== 'test') {
+      if (logMounts) {
         console.log(`Mounting route:`, routePaths[0])
       }
       const [routesMounted, routesWithoutValidation] = mountEndpoints({
@@ -109,7 +111,7 @@ const mountEndpoints = ({
   const guestAccess = endpoints.guestAccess
   const adminOnly = endpoints.ensureAdmin
 
-  Object.entries(endpoints).map(([method, endpoint]) => {
+  Object.entries(endpoints).map(([method, endpoint]: [string, Endpoint]) => {
     // skip exports that are not allowed Express methods
     const expressMethodName = method.toLowerCase()
     if (!isExpressMethod(expressMethodName)) {
@@ -169,8 +171,15 @@ const mountEndpoints = ({
     handlers = hasMiddleware
       ? [...handlers, ...endpoint]
       : [...handlers, endpoint]
+
     // add async handling to all handlers
     handlers = handlers.map(handler => asyncErrorHandler(handler))
+    // loop over handlers and print warnings if they are not async
+    handlers.forEach(handler => {
+      if (typeof handler !== 'function') {
+        console.error(`⛔️ Warning: ${method} handler is not async. `)
+      }
+    })
     // mount the route
     router[expressMethodName](paths, handlers)
     console.log(`\t | ${method} ${validationMsg}`)
