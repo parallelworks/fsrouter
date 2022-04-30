@@ -134,7 +134,7 @@ const mountEndpoints = ({
         console.log(`\t | Mounting ${method} with validation`)
         // verify that the validation object has the correct keys (query and body)
         if (hasQuery) {
-          validationMsg = `\t | ${method} has query validation\n`
+          validationMsg = `\n\t | has query validation\n`
           // add optional key property to all validators
           const query = {
             ...validation[method]?.query,
@@ -153,7 +153,7 @@ const mountEndpoints = ({
         }
         if (hasBody) {
           // Add body validation handler
-          validationMsg += `\t | ${method} has body validation`
+          validationMsg += `\n\t | has body validation`
           handlers.push(
             createBodyValidator({
               body: validation[method]?.body,
@@ -176,8 +176,8 @@ const mountEndpoints = ({
     handlers = handlers.map(handler => asyncErrorHandler(handler))
     // loop over handlers and print warnings if they are not async
     handlers.forEach(handler => {
-      if (typeof handler !== 'function') {
-        console.error(`⛔️ Warning: ${method} handler is not async. `)
+      if (handler.constructor.name !== 'AsyncFunction') {
+        console.error(`\t ⛔️ Warning: ${method} handler is not async. `)
       }
     })
     // mount the route
