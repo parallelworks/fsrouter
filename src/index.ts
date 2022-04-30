@@ -54,7 +54,7 @@ export const initFsRouting = async ({
       routePath = routePath.replace(/\/index$/, '')
       // do not handle routes that begin with _
       const lastSlash = routePath.lastIndexOf('/')
-      const endpointName = routePath.substr(lastSlash)
+      const endpointName = routePath.slice(lastSlash)
 
       if (endpointName.startsWith('/_')) {
         console.log('Skipping mounting:', routePath)
