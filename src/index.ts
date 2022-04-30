@@ -134,7 +134,7 @@ const mountEndpoints = ({
         console.log(`\t | Mounting ${method} with validation`)
         // verify that the validation object has the correct keys (query and body)
         if (hasQuery) {
-          validationMsg = `\n\t | has query validation\n`
+          validationMsg = `\n\t\t | has query validation\n`
           // add optional key property to all validators
           const query = {
             ...validation[method]?.query,
@@ -153,7 +153,7 @@ const mountEndpoints = ({
         }
         if (hasBody) {
           // Add body validation handler
-          validationMsg += `\n\t | has body validation`
+          validationMsg += `\n\t\t | has body validation`
           handlers.push(
             createBodyValidator({
               body: validation[method]?.body,
