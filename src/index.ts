@@ -82,10 +82,13 @@ export const initFsRouting = async ({
       numberOfRoutesWithoutValidation += routesWithoutValidation
       if (routesMounted === 0) console.log('\t | No exported HTTP methods')
     })
-  await Promise.all(promises).then(() =>
-    console.log(
-      `${numberOfFiles} route files processed, ${numberOfRoutes} routes mounted, ${numberOfRoutesWithoutValidation} routes do not have validation.`
-    )
+  await Promise.all(promises).then(() => {
+    if (process.env.NODE_ENV !== 'node') {
+      console.log(
+        `${numberOfFiles} route files processed, ${numberOfRoutes} routes mounted, ${numberOfRoutesWithoutValidation} routes do not have validation.`
+      )
+    }
+  }
   )
   return router
 }
