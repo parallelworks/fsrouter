@@ -77,6 +77,7 @@ export const initFsRouting = async ({
         endpoints: module,
         ensureAdmin,
         ensureAuthenticated,
+        logMounts,
       })
       numberOfRoutes += routesMounted
       numberOfRoutesWithoutValidation += routesWithoutValidation
@@ -99,6 +100,7 @@ interface IMountEndpointsParams {
   endpoints: EndpointModule
   ensureAdmin: RequestHandler
   ensureAuthenticated: RequestHandler
+  logMounts: boolean
 }
 
 const mountEndpoints = ({
@@ -106,6 +108,7 @@ const mountEndpoints = ({
   endpoints,
   ensureAdmin,
   ensureAuthenticated,
+  logMounts = true
 }: IMountEndpointsParams): [number, number] => {
   let mounted = 0
   let numberWithValidation = 0
@@ -134,7 +137,10 @@ const mountEndpoints = ({
       if (isHttpMethod(method)) {
         const hasBody = validation[method]?.body
         const hasQuery = validation[method]?.query
-        console.log(`\t | Mounting ${method} with validation`)
+        if (logMounts) {
+
+          console.log(`\t | Mounting ${method} with validation`)
+        }
         // verify that the validation object has the correct keys (query and body)
         if (hasQuery) {
           validationMsg = `\n\t\t | has query validation\n`
@@ -176,7 +182,7 @@ const mountEndpoints = ({
       : [...handlers, endpoint]
     // loop over handlers and print warnings if they are not async
     handlers.forEach(handler => {
-      if (handler.constructor.name !== 'AsyncFunction') {
+      if (handler.constructor.name !== 'AsyncFunction' && logMounts) {
         console.error(`\t ⛔️ Warning: ${method} handler is not async. `)
       }
     })
@@ -185,7 +191,10 @@ const mountEndpoints = ({
 
     // mount the route
     router[expressMethodName](paths, handlers)
-    console.log(`\t | ${method} ${validationMsg}`)
+    if (logMounts) {
+
+      console.log(`\t | ${method} ${validationMsg}`)
+    }
     mounted++
   })
   return [mounted, numberWithValidation]
