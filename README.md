@@ -26,7 +26,7 @@ export default async function main() {
   const router = await getFsRouter(routesPath)
   app.use(express.json())
   app.get('/healthzz', (req, res) => res.status(200).send())
-  app.use('/api/v2/stats', router)
+  app.use('/api', router)
 
   app.listen(port, () => {
     console.log(`Server listening on port ${port}`)
