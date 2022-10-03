@@ -9,7 +9,21 @@ export type Endpoint<
   | RequestHandler<RequestParams, RequestQuery, RequestBody, ResponseBody>
   | RequestHandler[]
 
-export const AllowedMethods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as const
+export const AllowedMethods = [
+  'GET',
+  'POST',
+  'PUT',
+  'PATCH',
+  'DELETE',
+  'ALL',
+] as const
 export type AllowedMethod = typeof AllowedMethods[number]
-export const ExpressMethods = ['get', 'post', 'put', 'patch', 'delete'] as const
+export const ExpressMethods = [
+  'get',
+  'post',
+  'put',
+  'patch',
+  'delete',
+  'all',
+] as const
 export type ExpressMethod = typeof ExpressMethods[number]
