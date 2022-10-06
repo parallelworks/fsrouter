@@ -34,7 +34,9 @@ export const initFsRouting = async ({
   logMounts = true,
 }: IInitFsRoutingParams) => {
   // Apply middleware first
-  console.log('Mounting routes')
+  if (logMounts) {
+    console.log('Mounting routes')
+  }
   let numberOfRoutes = 0
   let numberOfFiles = 0
   let numberOfRoutesWithoutValidation = 0
@@ -81,7 +83,7 @@ export const initFsRouting = async ({
       })
       numberOfRoutes += routesMounted
       numberOfRoutesWithoutValidation += routesWithoutValidation
-      if (routesMounted === 0) console.log('\t | No exported HTTP methods')
+      if (routesMounted === 0 && logMounts) console.log('\t | No exported HTTP methods')
     })
   await Promise.all(promises).then(() => {
     if (process.env.NODE_ENV !== 'node') {
