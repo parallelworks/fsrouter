@@ -209,7 +209,7 @@ const isHttpMethod = (exportKey: string): exportKey is AllowedMethod => {
 }
 
 const getFiles = async (src: string) => {
-  return glob(src + '/**/!(*.test)*(.ts|.js)', { nodir: true })
+  return glob(src + '/**/!(*.test).[tj]s', { nodir: true })
 }
 
 // Expose library
