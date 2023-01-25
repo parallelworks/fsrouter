@@ -83,7 +83,8 @@ export const initFsRouting = async ({
       })
       numberOfRoutes += routesMounted
       numberOfRoutesWithoutValidation += routesWithoutValidation
-      if (routesMounted === 0 && logMounts) console.log('\t | No exported HTTP methods')
+      if (routesMounted === 0 && logMounts)
+        console.log('\t | No exported HTTP methods')
     })
   await Promise.all(promises).then(() => {
     if (process.env.NODE_ENV !== 'node') {
@@ -91,8 +92,7 @@ export const initFsRouting = async ({
         `${numberOfFiles} route files processed, ${numberOfRoutes} routes mounted, ${numberOfRoutesWithoutValidation} routes do not have validation.`
       )
     }
-  }
-  )
+  })
   return router
 }
 
@@ -110,7 +110,7 @@ const mountEndpoints = ({
   endpoints,
   ensureAdmin,
   ensureAuthenticated,
-  logMounts = true
+  logMounts = true,
 }: IMountEndpointsParams): [number, number] => {
   let mounted = 0
   let numberWithValidation = 0
@@ -140,7 +140,6 @@ const mountEndpoints = ({
         const hasBody = validation[method]?.body
         const hasQuery = validation[method]?.query
         if (logMounts) {
-
           console.log(`\t | Mounting ${method} with validation`)
         }
         // verify that the validation object has the correct keys (query and body)
@@ -194,7 +193,6 @@ const mountEndpoints = ({
     // mount the route
     router[expressMethodName](paths, handlers)
     if (logMounts) {
-
       console.log(`\t | ${method} ${validationMsg}`)
     }
     mounted++
@@ -211,7 +209,7 @@ const isHttpMethod = (exportKey: string): exportKey is AllowedMethod => {
 }
 
 const getFiles = async (src: string) => {
-  return glob(src + '/**/*+(.ts|.js)', { nodir: true });
+  return glob(src + '/**/!(*.test)*(.ts|.js)', { nodir: true })
 }
 
 // Expose library
