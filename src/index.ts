@@ -213,6 +213,8 @@ const getFiles = async (src: string) => {
 }
 
 // Expose library
+export { getFiles }
+
 export {
   UserFacingError,
   defaultErrorHandler,
