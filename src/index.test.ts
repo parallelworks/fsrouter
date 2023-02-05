@@ -2,11 +2,31 @@ import { getFiles, initFsRouting } from '.'
 import path from 'path'
 
 const testroutesPath = path.join(__dirname, 'testroutes')
+const fullPath = relativePath => path.join(testroutesPath, relativePath)
 describe('routes', () => {
   it('should find all files in testroutes', async () => {
     const files = await getFiles(testroutesPath)
-    const fullPath = relativePath => path.join(testroutesPath, relativePath)
+
     const expectedFiles = [fullPath('index.ts')]
     expect(files).toEqual(expectedFiles)
   })
+
+  it('should mount all routes in testroutes', async () => {
+    const router = await initFsRouting({
+      ensureAdmin: jest.fn(),
+      ensureAuthenticated: jest.fn(),
+      routesPath: testroutesPath,
+      logMounts: false,
+    })
+
+    expect(router.stack).toHaveLength(1)
+  })
 })
+
+//     const router = await initFsRouting({
+//       ensureAdmin: () => {},
+//       ensureAuthenticated: () => {},
+//       routesPath: './src/testroutes',
+//       logMounts: true,
+//     })
+//     console.log(router.stack)
