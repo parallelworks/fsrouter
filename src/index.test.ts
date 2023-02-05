@@ -42,11 +42,3 @@ describe('routes', () => {
     expect(res.json).toHaveBeenCalledWith({ message: 'Hello World!' })
   })
 })
-
-//     const router = await initFsRouting({
-//       ensureAdmin: () => {},
-//       ensureAuthenticated: () => {},
-//       routesPath: './src/testroutes',
-//       logMounts: true,
-//     })
-//     console.log(router.stack)
