@@ -1,5 +1,6 @@
 {
   "name": "@parallelworks/fsrouter",
+  "type": "commonjs",
   "version": "0.0.20",
   "description": "Filesystem based router for Express.js",
   "author": "Michael McQuade",
@@ -7,7 +8,8 @@
   "types": "build/index.d.ts",
   "repository": "git@github.com:parallelworks/fsrouter.git",
   "scripts": {
-    "compile": "swc src -d build --copy-files"
+    "compile": "swc src -d build --copy-files",
+    "test": "jest"
   },
   "license": "UNLICENSED",
   "devDependencies": {
@@ -17,7 +19,10 @@
     "@types/express": "^4.17.13",
     "@types/glob": "^7.2.0",
     "@types/jest": "^29.4.0",
-    "jest": "^29.4.1"
+    "express": "^4.17.1",
+    "jest": "^29.4.1",
+    "ts-jest": "^29.0.5",
+    "typescript": "^4.9.5"
   },
   "peerDependencies": {
     "express": "^4.17.1",
