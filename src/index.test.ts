@@ -37,7 +37,6 @@ describe('routes', () => {
     }
     const next = jest.fn()
     // its the only route so its at index 0 of the router
-
     const route = router.stack[0].route.stack[1]
     route.handle(req, res, next)
     expect(res.json).toHaveBeenCalledWith({ message: 'Hello World!' })
