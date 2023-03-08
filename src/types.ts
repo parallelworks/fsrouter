@@ -6,7 +6,7 @@ export type Endpoint<
   RequestBody = any,
   ResponseBody = any
 > =
-  | RequestHandler<RequestParams, RequestQuery, RequestBody, ResponseBody>
+  | RequestHandler<RequestParams, ResponseBody, RequestBody, RequestQuery>
   | RequestHandler[]
 
 export const AllowedMethods = [
