@@ -1,7 +1,7 @@
 import type { RequestHandler } from 'express'
 // TODO: Change these to {} instead of any, which will make it more strict
 export type Endpoint<
-  RequestParams extends Record<string, string> = any,
+  RequestParams = Record<string, string>,
   RequestQuery = any,
   RequestBody = any,
   ResponseBody = any
