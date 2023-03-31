@@ -5,8 +5,7 @@ const fullPath = relativePath => path.join(testroutesPath, relativePath)
 describe('routes', () => {
   it('should find all files in testroutes', async () => {
     const files = await getFiles(testroutesPath)
-
-    const expectedFiles = [fullPath('index.ts'), fullPath('roles.ts')]
+    const expectedFiles = [fullPath('roles.ts'), fullPath('index.ts')]
     expect(files).toEqual(expectedFiles)
   })
 

@@ -1,6 +1,5 @@
 import { Request, RequestHandler, Router } from 'express'
-import globCb from 'glob'
-import { promisify } from 'util'
+import { glob } from 'glob'
 import { asyncErrorHandler } from './middleware/errors'
 import { createRolesMiddleware, TRolesResolver } from './middleware/roles'
 import {
@@ -11,8 +10,6 @@ import {
   ExpressMethods,
 } from './types'
 import { createBodyValidator, createQueryValidator } from './validation'
-
-const glob = promisify(globCb)
 
 interface EndpointModule extends Partial<Record<AllowedMethod, Endpoint>> {
   validation?: Partial<Record<AllowedMethod, Record<'body' | 'query', any>>>
@@ -247,7 +244,6 @@ const getFiles = async (src: string) => {
   }
 
   const files = await glob(src + '/**/!(*.test).[tj]s', { nodir: true })
-  console.log('files', files)
   return files
 }
 
