@@ -18,6 +18,7 @@ interface EndpointModule extends Partial<Record<AllowedMethod, Endpoint>> {
   validation?: Partial<Record<AllowedMethod, Record<'body' | 'query', any>>>
   guestAccess?: boolean
   ensureAdmin?: boolean
+  path: string // this is added by the router
 }
 
 interface IInitFsRoutingParams {
@@ -25,6 +26,18 @@ interface IInitFsRoutingParams {
   ensureAuthenticated: RequestHandler
   routesPath: string
   logMounts?: boolean
+}
+
+const getRoutePath = (path: string, routesPath: string) => {
+  // get the endpoint path for express by removing the base filesystem path
+  let routePath = path.replace(routesPath, '')
+  // remove the js portion
+  routePath = routePath.replace(/.js$/, '')
+  // replace index at beggining with /
+  routePath = routePath.replace(/^\/index/, '/')
+  // remove index at end
+  routePath = routePath.replace(/\/index$/, '')
+  return routePath
 }
 
 export const initFsRouting = async ({
@@ -44,18 +57,11 @@ export const initFsRouting = async ({
   const files = await getFiles(routesPath)
   numberOfFiles = files.length + 1
   // Sort by reverse alphabetical order, so items with colons are below items without colons. This makes it so we can override param routes.
-  const promises = files
+  const modulePromises = files
     .sort()
     .reverse()
     .map(async path => {
-      // get the endpoint path for express by removing the base filesystem path
-      let routePath = path.replace(routesPath, '')
-      // remove the js portion
-      routePath = routePath.replace(/.js$/, '')
-      // replace index at beggining with /
-      routePath = routePath.replace(/^\/index/, '/')
-      // remove index at end
-      routePath = routePath.replace(/\/index$/, '')
+      const routePath = getRoutePath(path, routesPath)
       // do not handle routes that begin with _
       const lastSlash = routePath.lastIndexOf('/')
       const endpointName = routePath.slice(lastSlash)
@@ -67,32 +73,41 @@ export const initFsRouting = async ({
 
       // import route
       const module: EndpointModule = await import(path)
-      // here we have the chance to alias routes to different locations, by storing multiple paths in routePaths
-      const routePaths = [routePath]
 
-      // we treat authentication differently on u routes and API routes, can get rid of this when client is separted from API server
-      if (logMounts) {
-        console.log(`Mounting route:`, routePaths[0])
-      }
-      const [routesMounted, routesWithoutValidation] = mountEndpoints({
-        paths: routePaths,
-        endpoints: module,
-        ensureAdmin,
-        ensureAuthenticated,
-        logMounts,
-      })
-      numberOfRoutes += routesMounted
-      numberOfRoutesWithoutValidation += routesWithoutValidation
-      if (routesMounted === 0 && logMounts)
-        console.log('\t | No exported HTTP methods')
+      module.path = routePath
+
+      return module
     })
-  await Promise.all(promises).then(() => {
-    if (process.env.NODE_ENV !== 'node') {
-      console.log(
-        `${numberOfFiles} route files processed, ${numberOfRoutes} routes mounted, ${numberOfRoutesWithoutValidation} routes do not have validation.`
-      )
+  const modules = await Promise.all(modulePromises)
+  modules.map(module => {
+    if (!module) return
+    const routePath = getRoutePath(module.path, routesPath)
+    // here we have the chance to alias routes to different locations, by storing multiple paths in routePaths
+    const routePaths = [routePath]
+
+    // we treat authentication differently on u routes and API routes, can get rid of this when client is separted from API server
+    if (logMounts) {
+      console.log(`Mounting route:`, routePaths[0])
     }
+    const [routesMounted, routesWithoutValidation] = mountEndpoints({
+      paths: routePaths,
+      endpoints: module,
+      ensureAdmin,
+      ensureAuthenticated,
+      logMounts,
+    })
+    numberOfRoutes += routesMounted
+    numberOfRoutesWithoutValidation += routesWithoutValidation
+    if (routesMounted === 0 && logMounts)
+      console.log('\t | No exported HTTP methods')
   })
+
+  if (process.env.NODE_ENV !== 'node') {
+    console.log(
+      `${numberOfFiles} route files processed, ${numberOfRoutes} routes mounted, ${numberOfRoutesWithoutValidation} routes do not have validation.`
+    )
+  }
+
   return router
 }
 
