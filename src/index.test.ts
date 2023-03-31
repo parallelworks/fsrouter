@@ -59,9 +59,9 @@ describe('roles', () => {
     }
     const next = jest.fn()
     // its the only route so its at index 0 of the router
-    const route = router.stack.find(layer => layer.route.methods.post).route
-      .stack[1]
-    route.handle(req, res, next)
+    const post = router.stack.find(layer => layer.route.methods.post)
+    const route = post.route.stack[1]
+    await route.handle(req, res, next)
     const error = new UserFacingError(
       'You do not have permission to access this resource',
       403
