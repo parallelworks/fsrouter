@@ -10,7 +10,7 @@ import {
   ExpressMethods,
 } from './types'
 import { createBodyValidator, createQueryValidator } from './validation'
-const router = Router()
+
 const glob = promisify(globCb)
 
 interface EndpointModule extends Partial<Record<AllowedMethod, Endpoint>> {
@@ -45,6 +45,7 @@ export const initFsRouting = async ({
   routesPath,
   logMounts = true,
 }: IInitFsRoutingParams) => {
+  const router = Router()
   // Apply middleware first
   if (logMounts) {
     console.log('Mounting routes')
@@ -94,6 +95,7 @@ export const initFsRouting = async ({
       ensureAdmin,
       ensureAuthenticated,
       logMounts,
+      router,
     })
     numberOfRoutes += routesMounted
     numberOfRoutesWithoutValidation += routesWithoutValidation
@@ -117,6 +119,7 @@ interface IMountEndpointsParams {
   ensureAdmin: RequestHandler
   ensureAuthenticated: RequestHandler
   logMounts: boolean
+  router: Router
 }
 
 const mountEndpoints = ({
@@ -125,6 +128,7 @@ const mountEndpoints = ({
   ensureAdmin,
   ensureAuthenticated,
   logMounts = true,
+  router,
 }: IMountEndpointsParams): [number, number] => {
   let mounted = 0
   let numberWithValidation = 0
@@ -242,5 +246,3 @@ export {
 } from './middleware/errors'
 export { Endpoint } from './types'
 export { getFiles }
-
-export default router
