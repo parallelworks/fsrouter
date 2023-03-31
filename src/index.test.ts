@@ -1,13 +1,12 @@
-import { getFiles, initFsRouting } from '.'
+import { getFiles, initFsRouting, UserFacingError } from '.'
 import path from 'path'
-
 const testroutesPath = path.join(__dirname, 'testroutes')
 const fullPath = relativePath => path.join(testroutesPath, relativePath)
 describe('routes', () => {
   it('should find all files in testroutes', async () => {
     const files = await getFiles(testroutesPath)
 
-    const expectedFiles = [fullPath('index.ts')]
+    const expectedFiles = [fullPath('index.ts'), fullPath('roles.ts')]
     expect(files).toEqual(expectedFiles)
   })
 
@@ -41,5 +40,60 @@ describe('routes', () => {
     const route = router.stack[0].route.stack[1]
     route.handle(req, res, next)
     expect(res.json).toHaveBeenCalledWith({ message: 'Hello World!' })
+  })
+})
+
+describe('roles', () => {
+  it('it rejects acess to routes requiring roles the user does not have', async () => {
+    const router = await initFsRouting({
+      ensureAdmin: jest.fn(),
+      ensureAuthenticated: jest.fn(),
+      routesPath: fullPath('roles.ts'), // mount only the roles.ts file
+      logMounts: false,
+    })
+
+    const res = {
+      json: jest.fn(),
+    }
+    const req = {
+      method: 'POST',
+    }
+    const next = jest.fn()
+    // its the only route so its at index 0 of the router
+    const route = router.stack.find(layer => layer.route.methods.post).route
+      .stack[1]
+    route.handle(req, res, next)
+    const error = new UserFacingError(
+      'You do not have permission to access this resource',
+      403
+    )
+
+    expect(next).toHaveBeenCalledWith(error)
+  })
+  it('it allows access to routes with roles that the user has', async () => {
+    const router = await initFsRouting({
+      ensureAdmin: jest.fn(),
+      ensureAuthenticated: jest.fn(),
+      routesPath: fullPath('roles.ts'), // mount only the roles.ts file
+      logMounts: false,
+      rolesResolver: () => ['org:admin', 'org:settings'],
+    })
+
+    const res = {
+      json: jest.fn(),
+    }
+    const req = {
+      method: 'POST',
+    }
+    const next = jest.fn()
+    // its the only route so its at index 0 of the router
+    const route = router.stack.find(layer => layer.route.methods.post).route
+      .stack[2]
+
+    route.handle(req, res, next)
+
+    expect(res.json).toHaveBeenCalledWith({
+      message: 'Hello Authorized World!',
+    })
   })
 })

@@ -1,7 +1,8 @@
-import { RequestHandler, Router } from 'express'
+import { Request, RequestHandler, Router } from 'express'
 import globCb from 'glob'
 import { promisify } from 'util'
 import { asyncErrorHandler } from './middleware/errors'
+import { createRolesMiddleware, TRolesResolver } from './middleware/roles'
 import {
   AllowedMethod,
   AllowedMethods,
@@ -18,13 +19,7 @@ interface EndpointModule extends Partial<Record<AllowedMethod, Endpoint>> {
   guestAccess?: boolean
   ensureAdmin?: boolean
   path: string // this is added by the router
-}
-
-interface IInitFsRoutingParams {
-  ensureAdmin: RequestHandler
-  ensureAuthenticated: RequestHandler
-  routesPath: string
-  logMounts?: boolean
+  roles?: string[]
 }
 
 const getRoutePath = (path: string, routesPath: string) => {
@@ -39,11 +34,21 @@ const getRoutePath = (path: string, routesPath: string) => {
   return routePath
 }
 
+interface IInitFsRoutingParams {
+  ensureAdmin: RequestHandler
+  ensureAuthenticated: RequestHandler
+  routesPath: string
+  logMounts?: boolean
+  /** Returns an array of strings representing all the roles for the user who made this request */
+  rolesResolver?: TRolesResolver
+}
+
 export const initFsRouting = async ({
   ensureAdmin,
   ensureAuthenticated,
   routesPath,
   logMounts = true,
+  rolesResolver = () => [],
 }: IInitFsRoutingParams) => {
   const router = Router()
   // Apply middleware first
@@ -96,6 +101,7 @@ export const initFsRouting = async ({
       ensureAuthenticated,
       logMounts,
       router,
+      rolesResolver,
     })
     numberOfRoutes += routesMounted
     numberOfRoutesWithoutValidation += routesWithoutValidation
@@ -120,6 +126,7 @@ interface IMountEndpointsParams {
   ensureAuthenticated: RequestHandler
   logMounts: boolean
   router: Router
+  rolesResolver: TRolesResolver
 }
 
 const mountEndpoints = ({
@@ -129,6 +136,7 @@ const mountEndpoints = ({
   ensureAuthenticated,
   logMounts = true,
   router,
+  rolesResolver,
 }: IMountEndpointsParams): [number, number] => {
   let mounted = 0
   let numberWithValidation = 0
@@ -136,6 +144,7 @@ const mountEndpoints = ({
   const validation = endpoints.validation
   const guestAccess = endpoints.guestAccess
   const adminOnly = endpoints.ensureAdmin
+  const roles = endpoints.roles
 
   Object.entries(endpoints).map(([method, endpoint]: [string, Endpoint]) => {
     // skip exports that are not allowed Express methods
@@ -149,6 +158,11 @@ const mountEndpoints = ({
 
       if (adminOnly) {
         handlers.push(ensureAdmin)
+      }
+    }
+    if (roles?.hasOwnProperty(method)) {
+      if (isHttpMethod(method)) {
+        handlers.push(createRolesMiddleware(roles[method], rolesResolver))
       }
     }
     let validationMsg = ''
