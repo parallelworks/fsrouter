@@ -1,5 +1,7 @@
+import { RequestHandler, Router } from 'express'
+import globCb from 'glob'
+import { promisify } from 'util'
 import { asyncErrorHandler } from './middleware/errors'
-import { createBodyValidator, createQueryValidator } from './validation'
 import {
   AllowedMethod,
   AllowedMethods,
@@ -7,10 +9,7 @@ import {
   ExpressMethod,
   ExpressMethods,
 } from './types'
-import { RequestHandler, Router } from 'express'
-import globCb from 'glob'
-import { promisify } from 'util'
-
+import { createBodyValidator, createQueryValidator } from './validation'
 const router = Router()
 const glob = promisify(globCb)
 
@@ -224,17 +223,24 @@ const isHttpMethod = (exportKey: string): exportKey is AllowedMethod => {
 }
 
 const getFiles = async (src: string) => {
-  return glob(src + '/**/!(*.test).[tj]s', { nodir: true })
+  // if we're trying to mount a single file, just return src
+  if (src.endsWith('.ts') || src.endsWith('.js')) {
+    return [src]
+  }
+
+  const files = await glob(src + '/**/!(*.test).[tj]s', { nodir: true })
+  console.log('files', files)
+  return files
 }
 
 // Expose library
-export { getFiles }
-
+export { FromSchema } from 'json-schema-to-ts'
 export {
-  UserFacingError,
   defaultErrorHandler,
+  UserFacingError,
   userFacingErrorHandler,
 } from './middleware/errors'
 export { Endpoint } from './types'
-export { FromSchema } from 'json-schema-to-ts'
+export { getFiles }
+
 export default router

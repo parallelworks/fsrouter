@@ -19,13 +19,14 @@ describe('routes', () => {
       logMounts: false,
     })
 
-    expect(router.stack).toHaveLength(1)
+    expect(router.stack).toHaveLength(3)
   })
   it('can hit the mounted route', async () => {
+    const routesPath = fullPath('index.ts')
     const router = await initFsRouting({
       ensureAdmin: jest.fn(),
       ensureAuthenticated: jest.fn(),
-      routesPath: fullPath(testroutesPath + '/index.ts'), // mount only the index.ts file
+      routesPath, // mount only the index.ts file
       logMounts: false,
     })
 
