@@ -16,6 +16,8 @@ export const createRolesMiddleware = (
     next: NextFunction
   ) => {
     const userRoles = await rolesResolver(req)
+    // @ts-ignore
+    req.roles = userRoles
     const hasRole = userRoles.some(role => roles?.includes(role))
     if (hasRole) {
       next()
