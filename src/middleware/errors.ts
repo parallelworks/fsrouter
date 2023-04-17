@@ -46,6 +46,7 @@ export const userFacingErrorHandler: ErrorRequestHandler = (
     return next(err)
   }
   // We're not in development, and this is not a user facing error, return a default "Unknown error"
+  console.error(err)
   return res.status(500).json({
     error: true,
     message: 'Unknown Error',
