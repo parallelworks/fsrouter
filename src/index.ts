@@ -47,7 +47,7 @@ export const initFsRouting = async ({
   logMounts = true,
   rolesResolver = () => [],
 }: IInitFsRoutingParams) => {
-  const router = Router()
+  const router = Router({ caseSensitive: true })
   // Apply middleware first
   if (logMounts) {
     console.log('Mounting routes')
