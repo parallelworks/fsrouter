@@ -1,6 +1,6 @@
 import ajv from 'ajv/dist/2020'
 import { RequestHandler } from 'express'
-import ajvErrors from 'ajv-errors'
+import ajvErrors from 'ajv-errors/dist'
 const Ajv = new ajv({ coerceTypes: true, allErrors: true })
 ajvErrors(Ajv, { singleError: false })
 interface createQueryValidatorParams {
