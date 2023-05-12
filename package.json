@@ -1,7 +1,7 @@
 {
   "name": "@parallelworks/fsrouter",
   "type": "commonjs",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Filesystem based router for Express.js",
   "author": "Michael McQuade",
   "main": "build/index.js",
@@ -24,7 +24,7 @@
     "express": "^4.17.1"
   },
   "dependencies": {
-    "ajv": "^8.11.0",
+    "ajv": "^8.12.0",
     "ajv-errors": "^3.0.0",
     "glob": "^9.3.2",
     "json-schema-to-ts": "^2.7.2"
