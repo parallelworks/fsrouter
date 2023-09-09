@@ -40,13 +40,15 @@ interface IInitFsRoutingParams {
   rolesResolver?: TRolesResolver
 }
 
-export const initFsRouting = async ({
+export const initFsRouting: (
+  params: IInitFsRoutingParams
+) => Promise<Router> = async ({
   ensureAdmin,
   ensureAuthenticated,
   routesPath,
   logMounts = true,
   rolesResolver = () => [],
-}: IInitFsRoutingParams) => {
+}) => {
   const router = Router({ caseSensitive: true })
   // Apply middleware first
   if (logMounts) {
