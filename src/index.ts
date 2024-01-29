@@ -23,7 +23,7 @@ const getRoutePath = (path: string, routesPath: string) => {
   // get the endpoint path for express by removing the base filesystem path
   let routePath = path.replace(routesPath, '')
   // remove the js portion
-  routePath = routePath.replace(/.js$/, '')
+  routePath = routePath.replace(/\.js|\.ts$/, '')
   // replace index at beggining with /
   routePath = routePath.replace(/^\/index/, '/')
   // remove index at end
