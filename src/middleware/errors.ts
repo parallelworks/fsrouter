@@ -8,6 +8,7 @@ import e, {
 
 export class UserFacingError extends Error {
   timestamp: Date
+  fields: Record<string, unknown> = {}
   constructor(public message: string, public statusCode?: number) {
     super(message)
     this.name = 'UserFacingError'
@@ -40,7 +41,7 @@ export const userFacingErrorHandler: ErrorRequestHandler = (
     // TODO: Get status code from error if it exists
     // return the user facing error message
     return res.status(err.statusCode || 500).json({
-      ...err,
+      ...err.fields,
       error: true,
       message: err.message.toString(),
       timestamp: err.timestamp,

@@ -8,10 +8,9 @@ import {
 } from './errors'
 
 class extendedError extends UserFacingError {
-  hi: string
   constructor(someParam: string) {
     super('This extends userfacingerror', 400)
-    this.hi = someParam
+    this.fields = { hi: someParam }
   }
 }
 
@@ -54,8 +53,6 @@ describe('user facing errors', () => {
     // @ts-expect-error types dont match
     userFacingErrorHandler(error, req, res, next)
     expect(returnValue).toEqual({
-      name: 'UserFacingError',
-      statusCode: 400,
       error: true,
       message: 'This extends userfacingerror',
       path: '/test',
