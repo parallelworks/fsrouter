@@ -66,7 +66,6 @@ describe('user facing errors', () => {
     let returnValue: Record<string, unknown> = {};
     const error = new Error('This is a regular error');
     const jsonFunc = (input: Record<string, unknown>) => {
-      console.log('@@', input);
       // dont care about the timestamp
       delete input['timestamp'];
       returnValue = input;
