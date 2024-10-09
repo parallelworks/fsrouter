@@ -1,29 +1,33 @@
-import {
+import e, {
   ErrorRequestHandler,
   NextFunction,
   Request,
   RequestHandler,
   Response,
-} from 'express'
+} from 'express';
 
 export class UserFacingError extends Error {
-  timestamp: Date
+  timestamp: Date;
   constructor(public message: string, public statusCode?: number) {
-    super(message)
-    this.name = 'UserFacingError'
-    this.timestamp = new Date()
+    super(message);
+    this.name = 'UserFacingError';
+    this.timestamp = new Date();
   }
 }
 
+export const isUserFacingError = (err: any): err is UserFacingError => {
+  return err instanceof UserFacingError;
+};
+
 // TODO: Make this a class like UserFacingError
 interface IError {
-  message: string
-  error: boolean
-  path: string
-  time: Date
-  stack?: string
+  message: string;
+  error: boolean;
+  path: string;
+  time: Date;
+  stack?: string;
 }
-const development = process.env.NODE_ENV !== 'production'
+const development = process.env.NODE_ENV !== 'production';
 
 export const userFacingErrorHandler: ErrorRequestHandler = (
   err,
@@ -31,29 +35,29 @@ export const userFacingErrorHandler: ErrorRequestHandler = (
   res,
   next
 ) => {
-  if (err instanceof UserFacingError) {
-    console.error(err.toString())
+  if (isUserFacingError(err)) {
+    console.error(err.toString());
     // TODO: Get status code from error if it exists
     // return the user facing error message
     return res.status(err.statusCode || 500).json({
+      ...err,
       error: true,
       message: err.message.toString(),
       timestamp: err.timestamp,
       path: req.originalUrl,
-    })
+    });
   } else if (development) {
     // go to the default error handler, which shows more details
-    return next(err)
+    return next(err);
   }
   // We're not in development, and this is not a user facing error, return a default "Unknown error"
-  console.error(err)
   return res.status(500).json({
     error: true,
     message: 'Unknown Error',
-    timstamp: new Date(),
+    timestamp: new Date(),
     path: req.originalUrl,
-  })
-}
+  });
+};
 
 export const defaultErrorHandler: ErrorRequestHandler = (
   err,
@@ -61,20 +65,20 @@ export const defaultErrorHandler: ErrorRequestHandler = (
   res,
   next
 ) => {
-  const message = err.message || 'Unknown error'
+  const message = err.message || 'Unknown error';
   console.error(
     'Default error handler shown in development. Following error triggered it: ',
     err
-  )
+  );
   const body: IError = {
     error: true,
     time: new Date(),
     message,
     path: req.originalUrl,
     stack: err.stack,
-  }
-  return res.status(500).json(body)
-}
+  };
+  return res.status(500).json(body);
+};
 
 // This is used to wrap async functions
 export const asyncErrorHandler = function wrap(fn: RequestHandler) {
@@ -83,9 +87,9 @@ export const asyncErrorHandler = function wrap(fn: RequestHandler) {
     try {
       // await the function, if it throws, then go to an error handler
 
-      await fn(req, res, next)
+      await fn(req, res, next);
     } catch (e) {
-      next(e)
+      next(e);
     }
-  }
-}
+  };
+};
