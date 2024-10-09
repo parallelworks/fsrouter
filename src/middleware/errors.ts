@@ -15,7 +15,7 @@ export class UserFacingError extends Error {
   }
 }
 
-export const isUserFacingError = (err: any): err is UserFacingError => {
+export const isUserFacingError = (err: unknown): err is UserFacingError => {
   return err instanceof UserFacingError
 }
 
