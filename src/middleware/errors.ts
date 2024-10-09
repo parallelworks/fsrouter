@@ -1,4 +1,4 @@
-import {
+import e, {
   ErrorRequestHandler,
   NextFunction,
   Request,
@@ -8,11 +8,16 @@ import {
 
 export class UserFacingError extends Error {
   timestamp: Date
+  fields: Record<string, unknown> = {}
   constructor(public message: string, public statusCode?: number) {
     super(message)
     this.name = 'UserFacingError'
     this.timestamp = new Date()
   }
+}
+
+export const isUserFacingError = (err: unknown): err is UserFacingError => {
+  return err instanceof UserFacingError
 }
 
 // TODO: Make this a class like UserFacingError
@@ -31,11 +36,12 @@ export const userFacingErrorHandler: ErrorRequestHandler = (
   res,
   next
 ) => {
-  if (err instanceof UserFacingError) {
+  if (isUserFacingError(err)) {
     console.error(err.toString())
     // TODO: Get status code from error if it exists
     // return the user facing error message
     return res.status(err.statusCode || 500).json({
+      ...err.fields,
       error: true,
       message: err.message.toString(),
       timestamp: err.timestamp,
@@ -46,11 +52,10 @@ export const userFacingErrorHandler: ErrorRequestHandler = (
     return next(err)
   }
   // We're not in development, and this is not a user facing error, return a default "Unknown error"
-  console.error(err)
   return res.status(500).json({
     error: true,
     message: 'Unknown Error',
-    timstamp: new Date(),
+    timestamp: new Date(),
     path: req.originalUrl,
   })
 }
