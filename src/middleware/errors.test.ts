@@ -33,6 +33,7 @@ describe('user facing errors', () => {
   it('returns all fields of UserFacingErrors', () => {
     let returnValue: Record<string, unknown> = {}
     const error = new extendedError('This is a user facing error')
+    const userError = new UserFacingError('This is a user facing error')
     const jsonFunc = (input: Record<string, unknown>) => {
       // dont care about the timestamp
       delete input['timestamp']
@@ -57,6 +58,13 @@ describe('user facing errors', () => {
       message: 'This extends userfacingerror',
       path: '/test',
       hi: 'This is a user facing error',
+    })
+    // @ts-expect-error types dont match
+    userFacingErrorHandler(userError, req, res, next)
+    expect(returnValue).toEqual({
+      error: true,
+      message: 'This is a user facing error',
+      path: '/test',
     })
   })
   it('returns some fields of UnknownErrors', () => {
