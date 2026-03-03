@@ -13,20 +13,20 @@
   },
   "license": "UNLICENSED",
   "devDependencies": {
-    "@types/express": "^4.17.17",
-    "@types/jest": "^29.4.0",
-    "express": "^4.18.2",
-    "jest": "^29.4.1",
-    "ts-jest": "^29.0.5",
+    "@types/express": "^4.17.25",
+    "@types/jest": "^29.5.14",
+    "express": "^4.22.1",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.4.6",
     "typescript": "^4.9.5"
   },
   "peerDependencies": {
     "express": "^4.17.1"
   },
   "dependencies": {
-    "ajv": "^8.12.0",
+    "ajv": "^8.18.0",
     "ajv-errors": "^3.0.0",
-    "glob": "^9.3.2",
-    "json-schema-to-ts": "^2.7.2"
+    "glob": "^9.3.5",
+    "json-schema-to-ts": "^2.12.0"
   }
 }
