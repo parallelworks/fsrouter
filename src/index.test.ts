@@ -1,5 +1,13 @@
 import { getFiles, initFsRouting, UserFacingError } from '.'
+import type { Request, Response } from 'express'
 import path from 'path'
+
+// Express Route objects have a `methods` record at runtime
+declare module 'express-serve-static-core' {
+  interface IRoute {
+    methods: Record<string, boolean>
+  }
+}
 const testroutesPath = path.join(__dirname, 'testroutes')
 const fullPath = relativePath => path.join(testroutesPath, relativePath)
 describe('routes', () => {
@@ -28,16 +36,12 @@ describe('routes', () => {
       logMounts: false,
     })
 
-    const res = {
-      json: jest.fn(),
-    }
-    const req = {
-      method: 'GET',
-    }
+    const res = { json: jest.fn() } as unknown as Response
+    const req = { method: 'GET' } as unknown as Request
     const next = jest.fn()
     // its the only route so its at index 0 of the router
     const route = router.stack[0]!.route!.stack[1]
-    route.handle(req as any, res as any, next)
+    route.handle(req, res, next)
     expect(res.json).toHaveBeenCalledWith({ message: 'Hello World!' })
   })
 })
@@ -51,17 +55,13 @@ describe('roles', () => {
       logMounts: false,
     })
 
-    const res = {
-      json: jest.fn(),
-    }
-    const req = {
-      method: 'POST',
-    }
+    const res = { json: jest.fn() } as unknown as Response
+    const req = { method: 'POST' } as unknown as Request
     const next = jest.fn()
     // its the only route so its at index 0 of the router
-    const post = router.stack.find(layer => (layer.route as any)?.methods?.post)
+    const post = router.stack.find(layer => layer.route?.methods.post)
     const route = post!.route!.stack[1]
-    await route.handle(req as any, res as any, next)
+    await route.handle(req, res, next)
     const error = new UserFacingError(
       'You do not have permission to access this resource',
       403
@@ -78,18 +78,14 @@ describe('roles', () => {
       rolesResolver: () => ['org:admin', 'org:settings'],
     })
 
-    const res = {
-      json: jest.fn(),
-    }
-    const req = {
-      method: 'POST',
-    }
+    const res = { json: jest.fn() } as unknown as Response
+    const req = { method: 'POST' } as unknown as Request
     const next = jest.fn()
     // its the only route so its at index 0 of the router
-    const route = router.stack.find(layer => (layer.route as any)?.methods?.post)!.route!
+    const route = router.stack.find(layer => layer.route?.methods.post)!.route!
       .stack[2]
 
-    route.handle(req as any, res as any, next)
+    route.handle(req, res, next)
 
     expect(res.json).toHaveBeenCalledWith({
       message: 'Hello Authorized World!',
