@@ -36,8 +36,8 @@ describe('routes', () => {
     }
     const next = jest.fn()
     // its the only route so its at index 0 of the router
-    const route = router.stack[0].route.stack[1]
-    route.handle(req, res, next)
+    const route = router.stack[0]!.route!.stack[1]
+    route.handle(req as any, res as any, next)
     expect(res.json).toHaveBeenCalledWith({ message: 'Hello World!' })
   })
 })
@@ -59,9 +59,9 @@ describe('roles', () => {
     }
     const next = jest.fn()
     // its the only route so its at index 0 of the router
-    const post = router.stack.find(layer => layer.route.methods.post)
-    const route = post.route.stack[1]
-    await route.handle(req, res, next)
+    const post = router.stack.find(layer => (layer.route as any)?.methods?.post)
+    const route = post!.route!.stack[1]
+    await route.handle(req as any, res as any, next)
     const error = new UserFacingError(
       'You do not have permission to access this resource',
       403
@@ -86,10 +86,10 @@ describe('roles', () => {
     }
     const next = jest.fn()
     // its the only route so its at index 0 of the router
-    const route = router.stack.find(layer => layer.route.methods.post).route
+    const route = router.stack.find(layer => (layer.route as any)?.methods?.post)!.route!
       .stack[2]
 
-    route.handle(req, res, next)
+    route.handle(req as any, res as any, next)
 
     expect(res.json).toHaveBeenCalledWith({
       message: 'Hello Authorized World!',

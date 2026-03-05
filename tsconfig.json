@@ -22,11 +22,11 @@
     // make ts stricter
     "noImplicitAny": false,
     "strict": true,
-    "strictNullChecks": true
+    "strictNullChecks": true,
   }, // only look at these files
   "include": ["src/**/*"],
   "watchOptions": {
     // dont watch these files
-    "excludeDirectories": ["build", "dist", "**/node_modules"]
-  }
+    "excludeDirectories": ["build", "dist", "**/node_modules"],
+  },
 }
