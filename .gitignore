@@ -36,3 +36,5 @@ id_rsa_userhost
 !.yarn/versions
 # yarn v1 node_modules
 node_modules/
+# registry credentials
+.npmrc

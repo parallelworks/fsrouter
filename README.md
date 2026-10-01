@@ -1,6 +1,12 @@
 # fsrouter
 Filesystem based router for express.js
 
+# Installation
+
+```sh
+npm install @parallelworks/fsrouter
+```
+
 # Usage
 
 ```typescript
@@ -8,6 +14,7 @@ import express, { RequestHandler } from 'express'
 import { initFsRouting } from '@parallelworks/fsrouter'
 import path from 'path'
 const port = 3000
+const app = express()
 
 const routesPath = path.join(__dirname, '_routes')
 
@@ -81,6 +88,29 @@ To make a route public, add the following to the endpoint file:
 export const guestAccess = true
 ```
 
+A route cannot be both public and admin only, so exporting both is an error.
+
+To restrict a method to users with certain roles, export the roles for each method. The user needs at least one of the roles listed:
+
+```typescript
+export const roles = {
+  POST: ['org:admin', 'org:settings'],
+}
+```
+
+The roles of the user who made the request come from the `rolesResolver` that is passed to `initFsRouting`:
+
+```typescript
+const router = await initFsRouting({
+  ensureAdmin,
+  ensureAuthenticated,
+  routesPath,
+  rolesResolver: req => req.user.roles,
+})
+```
+
+The router refuses to start when these exports cannot be applied, e.g. when roles are set for a method that the file does not export a handler for.
+
 # **Validation**
 
 When you’re using the @parallelworks/fsrouter package, validation is handled with a special export. The [full JSON-schema spec](https://json-schema.org/draft/2020-12/json-schema-core.html#rfc.section.10.3.2.1) is available in these objects, so we can create some advanced validation if necessary.
@@ -129,3 +159,7 @@ export const GET: Endpoint<{jid: string}, {}, {}, {}> = (req, res) => {
     ...
 }
 ```
+
+# **Releasing**
+
+Pull requests are squash-merged, and their titles follow [Conventional Commits](https://www.conventionalcommits.org). From those titles, [release-please](https://github.com/googleapis/release-please) keeps a release pull request open. Merging the release pull request tags the version and publishes it to [npm](https://www.npmjs.com/package/@parallelworks/fsrouter).

@@ -7,6 +7,10 @@ export const createRolesMiddleware = (
   roles: string[],
   rolesResolver: TRolesResolver
 ) => {
+  // a string would be matched by substring, so only accept a list of role names
+  if (!Array.isArray(roles) || !roles.every(role => typeof role === 'string')) {
+    throw new TypeError('roles must be an array of role names')
+  }
   // call the roles resolver, to get the roles for the current user
   // if the user has any of the roles required for this route, then call next()
   // otherwise, call next with a UserFacingError
@@ -18,7 +22,8 @@ export const createRolesMiddleware = (
     const userRoles = await rolesResolver(req)
     // @ts-ignore
     req.roles = userRoles
-    const hasRole = userRoles.some(role => roles?.includes(role))
+    const hasRole =
+      Array.isArray(userRoles) && userRoles.some(role => roles.includes(role))
     if (hasRole) {
       next()
     } else {

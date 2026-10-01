@@ -1,4 +1,4 @@
-import e, {
+import {
   ErrorRequestHandler,
   NextFunction,
   Request,
@@ -28,7 +28,8 @@ interface IError {
   time: Date
   stack?: string
 }
-const development = process.env.NODE_ENV !== 'production'
+// read on every request, so that it does not depend on when this module was imported
+const isDevelopment = () => process.env.NODE_ENV !== 'production'
 
 export const userFacingErrorHandler: ErrorRequestHandler = (
   err,
@@ -36,6 +37,10 @@ export const userFacingErrorHandler: ErrorRequestHandler = (
   res,
   next
 ) => {
+  // the response has already started, so only express can finish handling this
+  if (res.headersSent) {
+    return next(err)
+  }
   if (isUserFacingError(err)) {
     console.error(err.toString())
     // TODO: Get status code from error if it exists
@@ -47,12 +52,12 @@ export const userFacingErrorHandler: ErrorRequestHandler = (
       timestamp: err.timestamp,
       path: req.originalUrl,
     })
-  } else if (development) {
+  } else if (isDevelopment()) {
     // go to the default error handler, which shows more details
     return next(err)
   }
   // We're not in development, and this is not a user facing error, return a default "Unknown error"
-  console.error('Unknown error returned on path:', req.originalUrl, err.toString())
+  console.error('Unknown error returned on path:', req.originalUrl, String(err))
   return res.status(500).json({
     error: true,
     message: 'Unknown Error',
@@ -67,17 +72,21 @@ export const defaultErrorHandler: ErrorRequestHandler = (
   res,
   next
 ) => {
-  const message = err.message || 'Unknown error'
   console.error(
     'Default error handler shown in development. Following error triggered it: ',
     err
   )
+  if (res.headersSent) {
+    return next(err)
+  }
+  // internal error details are only returned outside of production
+  const development = isDevelopment()
   const body: IError = {
     error: true,
     time: new Date(),
-    message,
+    message: (development && err?.message) || 'Unknown error',
     path: req.originalUrl,
-    stack: err.stack,
+    stack: development ? err?.stack : undefined,
   }
   return res.status(500).json(body)
 }
@@ -91,6 +100,11 @@ export const asyncErrorHandler = function wrap(fn: RequestHandler) {
 
       await fn(req, res, next)
     } catch (e) {
+      // express treats a falsy value as success and 'route'/'router' as a skip, either of
+      // which would let the request past this handler, so always pass along a real error
+      if (!e || e === 'route' || e === 'router') {
+        return next(new Error(`Handler threw a non-error value: ${String(e)}`))
+      }
       next(e)
     }
   }
