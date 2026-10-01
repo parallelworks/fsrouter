@@ -1,6 +1,6 @@
 import { RequestHandler, Router } from 'express'
 import { glob } from 'glob'
-import { resolve } from 'path'
+import { resolve, sep } from 'path'
 import { asyncErrorHandler } from './middleware/errors'
 import { createRolesMiddleware, TRolesResolver } from './middleware/roles'
 import {
@@ -12,7 +12,8 @@ import {
 } from './types'
 import { createBodyValidator, createQueryValidator } from './validation'
 
-type TValidation = Partial<Record<'body' | 'query', any>>
+const ValidationTargets = ['body', 'query'] as const
+type TValidation = Partial<Record<typeof ValidationTargets[number], any>>
 
 interface EndpointModule extends Partial<Record<AllowedMethod, Endpoint>> {
   validation?: Partial<Record<AllowedMethod, TValidation>>
@@ -26,6 +27,8 @@ const getRoutePath = (path: string, routesPath: string) => {
   let routePath = path.startsWith(routesPath)
     ? path.slice(routesPath.length)
     : path
+  // route paths always use forward slashes, whatever the filesystem uses
+  routePath = routePath.split(sep).join('/')
   // remove the file extension
   routePath = routePath.replace(/\.(js|ts)$/, '')
   // a top level index file is the root route
@@ -98,11 +101,8 @@ export const initFsRouting: (
     .map(path => ({ path, routePath: getRoutePath(path, root) }))
     .sort((a, b) => compareRoutePaths(a.routePath, b.routePath))
     .map(async ({ path, routePath }) => {
-      // do not handle routes that begin with _
-      const lastSlash = routePath.lastIndexOf('/')
-      const endpointName = routePath.slice(lastSlash)
-
-      if (endpointName.startsWith('/_')) {
+      // do not handle files that begin with _, or files in a folder that begins with _
+      if (routePath.split('/').some(segment => segment.startsWith('_'))) {
         if (logMounts) {
           console.log('Skipping mounting:', routePath)
         }
@@ -123,7 +123,7 @@ export const initFsRouting: (
 
     // we treat authentication differently on u routes and API routes, can get rid of this when client is separted from API server
     if (logMounts) {
-      console.log(`Mounting route:`, routePaths[0])
+      console.log(`Mounting route:`, routePaths[0] || '/')
     }
     const [routesMounted, routesWithoutValidation] = mountEndpoints({
       paths: routePaths,
@@ -171,7 +171,7 @@ const getMethodConfig = <T>(
   if (config === undefined) {
     return methodConfig
   }
-  if (typeof config !== 'object' || config === null || Array.isArray(config)) {
+  if (!isPlainObject(config)) {
     throw new TypeError(
       `${path}: ${name} must be an object keyed by HTTP method`
     )
@@ -181,7 +181,7 @@ const getMethodConfig = <T>(
     if (!isHttpMethod(method)) {
       throw new TypeError(`${path}: ${name}.${key} is not an HTTP method`)
     }
-    methodConfig[method] = value
+    methodConfig[method] = value as T
   })
   return methodConfig
 }
@@ -204,6 +204,26 @@ const mountEndpoints = ({
     endpoints.validation,
     path
   )
+  // a misspelled key such as Body would otherwise leave the route without that validation
+  Object.entries(validation).forEach(([method, methodValidation]) => {
+    if (!isPlainObject(methodValidation)) {
+      throw new TypeError(
+        `${path}: validation.${method} must be an object with a body or query schema`
+      )
+    }
+    Object.entries(methodValidation).forEach(([target, schema]) => {
+      if (!ValidationTargets.includes(target as keyof TValidation)) {
+        throw new TypeError(
+          `${path}: validation.${method}.${target} is not supported, use body or query`
+        )
+      }
+      if (schema !== undefined && !isPlainObject(schema)) {
+        throw new TypeError(
+          `${path}: validation.${method}.${target} must be a JSON schema object`
+        )
+      }
+    })
+  })
   const roles = getMethodConfig<string[]>('roles', endpoints.roles, path)
   const guestAccess = endpoints.guestAccess
   const adminOnly = endpoints.ensureAdmin
@@ -252,21 +272,21 @@ const mountEndpoints = ({
     }
     let validationMsg = ''
     const methodValidation = validation[httpMethod]
+    const hasBody = methodValidation?.body
+    const hasQuery = methodValidation?.query
     // check if it should have validation
-    if (methodValidation) {
-      const hasBody = methodValidation.body
-      const hasQuery = methodValidation.query
+    if (hasBody || hasQuery) {
       if (logMounts) {
         console.log(`\t | Mounting ${method} with validation`)
       }
       // verify that the validation object has the correct keys (query and body)
       if (hasQuery) {
-        validationMsg = `\n\t\t | has query validation\n`
+        validationMsg = `\n\t\t | has query validation`
         // add optional key property to all validators
         const query = {
-          ...methodValidation.query,
+          ...hasQuery,
           properties: {
-            ...methodValidation.query?.properties,
+            ...hasQuery.properties,
             key: { type: 'string', description: 'API Key' },
           },
         }
@@ -282,7 +302,7 @@ const mountEndpoints = ({
         validationMsg += `\n\t\t | has body validation`
         handlers.push(
           createBodyValidator({
-            body: methodValidation.body,
+            body: hasBody,
           })
         )
       }
@@ -292,13 +312,14 @@ const mountEndpoints = ({
       numberWithoutValidation++
     }
 
-    handlers = [...handlers, ...endpointHandlers]
-    // loop over handlers and print warnings if they are not async
-    handlers.forEach(handler => {
+    // print warnings for the handlers of this route that are not async. The middleware
+    // added above is not checked, because the route file has no control over it
+    endpointHandlers.forEach(handler => {
       if (handler.constructor.name !== 'AsyncFunction' && logMounts) {
-        console.error(`\t ⛔️ Warning: ${method} handler is not async. `)
+        console.warn(`\t ⛔️ Warning: ${method} handler is not async. `)
       }
     })
+    handlers = [...handlers, ...endpointHandlers]
     // add async handling to all handlers
     handlers = handlers.map(handler => asyncErrorHandler(handler))
 
@@ -319,14 +340,19 @@ const mountEndpoints = ({
       )
     }
   })
+  // the same goes for validation that no handler uses
   Object.keys(validation).forEach(method => {
     if (!mountedMethods.has(method)) {
-      console.warn(
+      throw new TypeError(
         `${path}: validation is set for ${method} but no ${method} handler is exported`
       )
     }
   })
   return [mounted, numberWithoutValidation]
+}
+
+const isPlainObject = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
 const isExpressMethod = (method: string): method is ExpressMethod => {

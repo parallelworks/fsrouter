@@ -16,6 +16,13 @@ class extendedError extends UserFacingError {
   }
 }
 
+// the error handlers log every error that they handle
+let consoleError: jest.SpyInstance
+beforeEach(() => {
+  consoleError = jest.spyOn(console, 'error').mockImplementation(() => {})
+})
+afterEach(() => jest.restoreAllMocks())
+
 describe('user facing errors', () => {
   it('identifies user facing errors', () => {
     const error = new UserFacingError('This is a user facing error')
@@ -99,13 +106,31 @@ describe('user facing errors', () => {
   })
 })
 
+describe('user facing error status codes', () => {
+  it.each([
+    [404, 404],
+    [undefined, 500],
+    [200, 500],
+    [99, 500],
+    [1000, 500],
+    [400.5, 500],
+    ['404', 500],
+  ])('responds to a status code of %p with %p', (statusCode, expected) => {
+    const res = { status: jest.fn().mockReturnValue({ json: jest.fn() }) }
+    const error = new UserFacingError('nope', statusCode as number)
+
+    // @ts-expect-error types dont match
+    userFacingErrorHandler(error, { originalUrl: '/test' }, res, jest.fn())
+    expect(res.status).toHaveBeenCalledWith(expected)
+    expect(consoleError).toHaveBeenCalledWith('UserFacingError: nope')
+  })
+})
+
 describe('default error handler', () => {
   it('does not return error details in production', () => {
     const json = jest.fn()
     const res = { status: jest.fn().mockImplementation(() => ({ json })) }
     const req = { originalUrl: '/test' }
-    jest.spyOn(console, 'error').mockImplementationOnce(() => {})
-
     // @ts-expect-error types dont match
     defaultErrorHandler(new Error('secret detail'), req, res, jest.fn())
     expect(res.status).toHaveBeenCalledWith(500)

@@ -46,6 +46,12 @@ In the above example, a router is created from a path `_routes`, and the admin a
 
 In a more realistic example, you can define custom middleware functions that determine if a request is authenticated or if the user is an admin.
 
+## **Logging**
+
+By default, every route is printed when it is mounted, with a warning for each handler of a route that is not an `async` function. Pass `logMounts: false` to `initFsRouting` to print nothing while mounting.
+
+`userFacingErrorHandler` and `defaultErrorHandler` always print the errors that they handle with `console.error`.
+
 ## **Creating a route**
 
 Routes are declared by exporting a function with the name of an HTTP verb from within one of these files, e.g.
@@ -72,7 +78,7 @@ export const POST: Endpoint = [
 - If the file is named `index.ts` then it will be the root route for that path.
 - If you prefix the filename with a `:` then it will be considered to be an Express [URL parameter](https://expressjs.com/en/guide/routing.html#route-parameters).
 - Folders will take priority over files, so if you have a `/api/index.ts` and `/api.ts`, the `index.ts` file will be added first; let's make sure we don't do this though!
-- If you need to override the routing system for some reason, files prefixed with `_` will be ignored. e.g. `_index.ts` would not be added to the router.
+- If you need to override the routing system for some reason, files and folders prefixed with `_` will be ignored. e.g. `_index.ts` and `_lib/helpers.ts` would not be added to the router. Any other file under the routes path is imported, and its exports that are named after an HTTP verb become routes, so keep helpers in a `_` folder or outside of the routes path.
 
 ## **Special exports**
 
@@ -109,7 +115,7 @@ const router = await initFsRouting({
 })
 ```
 
-The router refuses to start when these exports cannot be applied, e.g. when roles are set for a method that the file does not export a handler for.
+The router refuses to start when these exports cannot be applied, e.g. when roles or validation are set for a method that the file does not export a handler for.
 
 # **Validation**
 
@@ -124,6 +130,8 @@ export const validation = {
     }
 } as const
 ```
+
+The schemas of a method go under `query` and `body`, any other key is an error.
 
 Where the structure of a query object is a valid [JSON Schema](https://json-schema.org/), e.g. :
 
