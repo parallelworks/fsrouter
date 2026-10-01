@@ -28,6 +28,16 @@ interface IError {
   time: Date
   stack?: string
 }
+// node refuses to send a status outside of this range, and anything below 400 is not an error
+const getStatusCode = (statusCode: unknown) => {
+  return typeof statusCode === 'number' &&
+    Number.isInteger(statusCode) &&
+    statusCode >= 400 &&
+    statusCode <= 599
+    ? statusCode
+    : 500
+}
+
 // read on every request, so that it does not depend on when this module was imported
 const isDevelopment = () => process.env.NODE_ENV !== 'production'
 
@@ -45,10 +55,10 @@ export const userFacingErrorHandler: ErrorRequestHandler = (
     console.error(err.toString())
     // TODO: Get status code from error if it exists
     // return the user facing error message
-    return res.status(err.statusCode || 500).json({
+    return res.status(getStatusCode(err.statusCode)).json({
       ...err.fields,
       error: true,
-      message: err.message.toString(),
+      message: String(err.message),
       timestamp: err.timestamp,
       path: req.originalUrl,
     })
@@ -72,10 +82,7 @@ export const defaultErrorHandler: ErrorRequestHandler = (
   res,
   next
 ) => {
-  console.error(
-    'Default error handler shown in development. Following error triggered it: ',
-    err
-  )
+  console.error('Default error handler reached with the following error:', err)
   if (res.headersSent) {
     return next(err)
   }

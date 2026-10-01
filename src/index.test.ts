@@ -152,6 +152,11 @@ describe('route paths', () => {
     expect((await request('/_hidden')).status).toBe(404)
   })
 
+  it('does not mount files in a folder that begins with _', async () => {
+    const { request } = await serve({ routesPath: fixturePath('ordering') })
+    expect((await request('/_lib/helper')).status).toBe(404)
+  })
+
   it('does not return declaration files', async () => {
     const files = await getFiles(fixturePath('ordering'))
     expect(files.filter(file => file.endsWith('.d.ts'))).toEqual([])
@@ -176,6 +181,9 @@ describe('route configuration', () => {
     ['rolesNotArray.ts', 'roles must be an array of role names'],
     ['guestAdmin.ts', 'guestAccess and ensureAdmin cannot both be set'],
     ['notAHandler.ts', 'GET must be a request handler'],
+    ['validationWithoutHandler.ts', 'no POST handler is exported'],
+    ['validationUnknownTarget.ts', 'validation.POST.Body is not supported'],
+    ['validationNotSchema.ts', 'validation.GET.query must be a JSON schema'],
   ])('refuses to mount %s', async (file, message) => {
     await expect(
       serve({ routesPath: fixturePath(`invalid/${file}`) })
@@ -189,5 +197,39 @@ describe('route configuration', () => {
         ensureAuthenticated: undefined as unknown as RequestHandler,
       })
     ).rejects.toThrow('must be middleware functions')
+  })
+})
+
+describe('logging', () => {
+  const spyOnConsole = () =>
+    (['log', 'warn', 'error'] as const).map(level =>
+      jest.spyOn(console, level).mockImplementation(() => {})
+    )
+  afterEach(() => jest.restoreAllMocks())
+
+  it.each(['ordering', 'lowercase.ts', 'sync.ts'])(
+    'prints nothing for %s when logMounts is false',
+    async fixture => {
+      const spies = spyOnConsole()
+      await serve({ routesPath: fixturePath(fixture), logMounts: false })
+      spies.forEach(spy => expect(spy).not.toHaveBeenCalled())
+    }
+  )
+
+  it('does not warn about the middleware that fsrouter adds', async () => {
+    const [log, warn, error] = spyOnConsole()
+    // the route is async, but the auth middleware and the validators are not
+    await serve({ routesPath: fixturePath('lowercase.ts'), logMounts: true })
+    expect(log).toHaveBeenCalledWith('Mounting route:', '/')
+    expect(warn).not.toHaveBeenCalled()
+    expect(error).not.toHaveBeenCalled()
+  })
+
+  it('warns once for each handler of a route that is not async', async () => {
+    const [, warn, error] = spyOnConsole()
+    await serve({ routesPath: fixturePath('sync.ts'), logMounts: true })
+    expect(warn).toHaveBeenCalledTimes(2)
+    expect(warn.mock.calls[0][0]).toContain('GET handler is not async')
+    expect(error).not.toHaveBeenCalled()
   })
 })
