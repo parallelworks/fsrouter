@@ -1,0 +1,10 @@
+{
+  // what gets published: the library without its tests and test routes
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "incremental": false,
+    // src is not published, so embed the sources in the source maps
+    "inlineSources": true
+  },
+  "exclude": ["src/**/*.test.ts", "src/testroutes", "src/testfixtures"]
+}

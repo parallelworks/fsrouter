@@ -2,6 +2,8 @@
 process.env.NODE_ENV = 'production'
 
 import {
+  asyncErrorHandler,
+  defaultErrorHandler,
   isUserFacingError,
   UserFacingError,
   userFacingErrorHandler,
@@ -94,5 +96,48 @@ describe('user facing errors', () => {
       message: 'Unknown Error',
       path: req.originalUrl,
     })
+  })
+})
+
+describe('default error handler', () => {
+  it('does not return error details in production', () => {
+    const json = jest.fn()
+    const res = { status: jest.fn().mockImplementation(() => ({ json })) }
+    const req = { originalUrl: '/test' }
+    jest.spyOn(console, 'error').mockImplementationOnce(() => {})
+
+    // @ts-expect-error types dont match
+    defaultErrorHandler(new Error('secret detail'), req, res, jest.fn())
+    expect(res.status).toHaveBeenCalledWith(500)
+    const body = json.mock.calls[0][0]
+    expect(body.message).toBe('Unknown error')
+    expect(body.stack).toBeUndefined()
+  })
+})
+
+describe('async error handler', () => {
+  it.each([undefined, null, '', 'route', 'router'])(
+    'passes an error to next when a handler throws %p',
+    async thrown => {
+      const next = jest.fn()
+      const handler = asyncErrorHandler(async () => {
+        throw thrown
+      })
+      // @ts-expect-error the request and response are not used
+      await handler({}, {}, next)
+      expect(next).toHaveBeenCalledTimes(1)
+      expect(next.mock.calls[0][0]).toBeInstanceOf(Error)
+    }
+  )
+
+  it('passes thrown errors to next unchanged', async () => {
+    const next = jest.fn()
+    const error = new UserFacingError('nope', 400)
+    const handler = asyncErrorHandler(async () => {
+      throw error
+    })
+    // @ts-expect-error the request and response are not used
+    await handler({}, {}, next)
+    expect(next).toHaveBeenCalledWith(error)
   })
 })
